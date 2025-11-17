@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { requestSourceSync } from '@/services/sync/syncService'
 import { ALL_SOURCES } from '@/services/api/sourceRegistry'
+import ErrorAnalysis, { categorizeError } from './ErrorAnalysis'
 
 interface TestResult {
   sourceId: string
@@ -8,6 +9,7 @@ interface TestResult {
   status: 'pending' | 'running' | 'success' | 'failed'
   message?: string
   timestamp?: string
+  errorCategory?: 'expected' | 'warning' | 'error'
 }
 
 function BulkTestRunner() {
@@ -55,6 +57,7 @@ function BulkTestRunner() {
         ))
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
+        const errorInfo = categorizeError(message)
         console.error(`Test failed for ${source.name}:`, message)
         
         // Update to failed
@@ -63,6 +66,7 @@ function BulkTestRunner() {
             ...r, 
             status: 'failed', 
             message,
+            errorCategory: errorInfo.severity,
             timestamp: new Date().toISOString()
           } : r
         ))
@@ -89,6 +93,8 @@ function BulkTestRunner() {
   const successCount = results.filter(r => r.status === 'success').length
   const failedCount = results.filter(r => r.status === 'failed').length
   const pendingCount = results.filter(r => r.status === 'pending').length
+  const expectedErrorsCount = results.filter(r => r.errorCategory === 'expected').length
+  const actualErrorsCount = results.filter(r => r.status === 'failed' && r.errorCategory !== 'expected').length
 
   return (
     <div className="p-8 space-y-6">
@@ -111,7 +117,8 @@ function BulkTestRunner() {
         {results.length > 0 && (
           <div className="flex gap-4 text-sm">
             <span className="text-green-600 font-semibold">✓ {successCount} succeeded</span>
-            <span className="text-red-600 font-semibold">✗ {failedCount} failed</span>
+            <span className="text-blue-600 font-semibold">ℹ️ {expectedErrorsCount} expected errors</span>
+            <span className="text-red-600 font-semibold">✗ {actualErrorsCount} actual errors</span>
             <span className="text-gray-600 font-semibold">⏳ {pendingCount} pending</span>
           </div>
         )}
@@ -126,9 +133,28 @@ function BulkTestRunner() {
       )}
 
       {results.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold">Test Results</h2>
-          <div className="border border-border rounded-lg overflow-hidden">
+        <div className="space-y-4">
+          {/* Error Summary */}
+          {results.some(r => r.status === 'failed') && (
+            <div className="space-y-2">
+              <h2 className="text-lg font-semibold">Error Analysis</h2>
+              {results
+                .filter(r => r.status === 'failed' && r.message)
+                .map(result => (
+                  <ErrorAnalysis
+                    key={result.sourceId}
+                    error={result.message!}
+                    sourceName={result.sourceName}
+                  />
+                ))
+              }
+            </div>
+          )}
+
+          {/* Results Table */}
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Detailed Test Results</h2>
+            <div className="border border-border rounded-lg overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-muted">
                 <tr>
@@ -155,6 +181,7 @@ function BulkTestRunner() {
                 ))}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       )}

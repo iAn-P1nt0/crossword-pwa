@@ -44,27 +44,41 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
   const endpoint = buildRequestUrl(source.download.url, date)
   console.log(`[PuzzleApiService] Fetching from: ${endpoint}`)
   
-  const response = await fetch(endpoint, {
-    method: source.download.method ?? 'GET',
-    headers: source.download.headers,
-    signal,
-  })
+  try {
+    const response = await fetch(endpoint, {
+      method: source.download.method ?? 'GET',
+      headers: source.download.headers,
+      signal,
+      mode: 'cors',
+    })
 
-  console.log(`[PuzzleApiService] Response status: ${response.status}`)
+    console.log(`[PuzzleApiService] Response status: ${response.status}`)
 
-  if (!response.ok) {
-    throw new Error(`Failed to download puzzle from ${source.name}: ${response.status}`)
-  }
+    if (!response.ok) {
+      const errorType = categorizeHttpError(response.status)
+      const errorMessage = formatHttpError(source.name, response.status, errorType)
+      throw new Error(errorMessage)
+    }
 
-  const blob = await response.blob()
-  console.log(`[PuzzleApiService] Blob received, size: ${blob.size} bytes, type: ${blob.type}`)
-  
-  return {
-    sourceId: source.id,
-    format: source.download.format,
-    blob,
-    receivedAt: new Date().toISOString(),
-    etag: response.headers.get('etag') ?? undefined,
+    const blob = await response.blob()
+    console.log(`[PuzzleApiService] Blob received, size: ${blob.size} bytes, type: ${blob.type}`)
+    
+    return {
+      sourceId: source.id,
+      format: source.download.format,
+      blob,
+      receivedAt: new Date().toISOString(),
+      etag: response.headers.get('etag') ?? undefined,
+    }
+  } catch (error) {
+    // Enhanced error handling for network issues
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error(
+        `CORS blocked: ${source.name} does not allow browser access. ` +
+        `This is expected for most sources. Use a CORS proxy or server-side download in production.`
+      )
+    }
+    throw error
   }
 }
 
@@ -81,4 +95,23 @@ function buildRequestUrl(template: string, date?: string) {
   }
 
   return template.replace(/{{(YYYY|MM|DD)}}/g, (_, token: keyof typeof tokens) => tokens[token])
+}
+
+function categorizeHttpError(status: number): string {
+  if (status === 401 || status === 403) return 'AUTH_REQUIRED'
+  if (status === 404) return 'NOT_FOUND'
+  if (status === 429) return 'RATE_LIMITED'
+  if (status >= 500) return 'SERVER_ERROR'
+  return 'UNKNOWN'
+}
+
+function formatHttpError(sourceName: string, status: number, errorType: string): string {
+  const messages: Record<string, string> = {
+    AUTH_REQUIRED: `${sourceName} requires authentication (${status}). This is a paid/premium source.`,
+    NOT_FOUND: `${sourceName} puzzle not found (404). May not be published yet or URL pattern incorrect.`,
+    RATE_LIMITED: `${sourceName} rate limit exceeded (429). Try again later.`,
+    SERVER_ERROR: `${sourceName} server error (${status}). Try again later.`,
+    UNKNOWN: `${sourceName} returned error: ${status}`,
+  }
+  return messages[errorType] || messages.UNKNOWN
 }

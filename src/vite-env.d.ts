@@ -1,9 +1,10 @@
 /// <reference types="vite/client" />
 
-declare interface ImportMetaEnv {
+interface ImportMetaEnv {
   readonly VITE_ENABLE_REMOTE_SOURCES?: string
+  readonly VITE_CORS_PROXY_URL?: string
 }
 
-declare interface ImportMeta {
+interface ImportMeta {
   readonly env: ImportMetaEnv
 }
