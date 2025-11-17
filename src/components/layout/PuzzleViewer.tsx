@@ -36,8 +36,10 @@ function PuzzleViewer() {
   }))
 
   const { stats, recordCompletion } = useStats(currentPuzzle?.puzzleId)
-  const [statusMessage, setStatusMessage] = useState<string>()
-  const [solved, setSolved] = useState(false)
+  const statusKey = currentPuzzle?.puzzleId ?? 'global'
+  const [statusState, setStatusState] = useState<Record<string, { message?: string; solved: boolean }>>({})
+  const statusMessage = statusState[statusKey]?.message
+  const solved = statusState[statusKey]?.solved ?? false
 
   useEffect(() => {
     if (!currentPuzzle) return
@@ -46,11 +48,6 @@ function PuzzleViewer() {
     }, 1000)
     return () => window.clearInterval(timer)
   }, [currentPuzzle, incrementTimer])
-
-  useEffect(() => {
-    setStatusMessage(undefined)
-    setSolved(false)
-  }, [currentPuzzle?.puzzleId])
 
   const activeClue = useMemo(() => {
     if (!currentPuzzle) return undefined
@@ -77,11 +74,26 @@ function PuzzleViewer() {
 
   const handleValidate = () => {
     const solvedPuzzle = validatePuzzle()
-    setStatusMessage(solvedPuzzle ? 'Puzzle solved! Great work.' : 'Still some letters to fix.')
-    setSolved(solvedPuzzle)
+    updateStatusState({
+      message: solvedPuzzle ? 'Puzzle solved! Great work.' : 'Still some letters to fix.',
+      solved: solvedPuzzle,
+    })
     if (solvedPuzzle && currentPuzzle) {
       void recordCompletion(currentPuzzle.puzzleId, elapsedSeconds)
     }
+  }
+
+  const updateStatusState = (update: { message?: string; solved?: boolean }) => {
+    setStatusState((prev) => {
+      const next = prev[statusKey] ?? { message: undefined, solved: false }
+      return {
+        ...prev,
+        [statusKey]: {
+          message: update.message ?? next.message,
+          solved: update.solved ?? next.solved,
+        },
+      }
+    })
   }
 
   const clueStats = currentPuzzle
