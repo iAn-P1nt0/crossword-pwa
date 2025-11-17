@@ -32,6 +32,7 @@ export function subscribeDownloads(listener: DownloadListener) {
 }
 
 export function enqueueDownload(source: PuzzleSource, date?: string) {
+  console.log(`[DownloadManager] Enqueuing download for ${source.id}`, { date })
   return new Promise<DownloadEvent>((resolve, reject) => {
     const task: DownloadTask = {
       id: createTaskId(source.id),
@@ -52,11 +53,16 @@ async function processQueue(): Promise<void> {
   const task = queue.shift()
   if (!task) return
   activeTasks += 1
+  console.log(`[DownloadManager] Starting task ${task.id} for ${task.source.id}`)
   notify({ type: 'started', taskId: task.id, sourceId: task.source.id })
   await persistQueueRecord(task, 'in-progress')
   try {
+    console.log(`[DownloadManager] Calling downloadAndParsePuzzle for ${task.source.id}`)
     const result = await downloadAndParsePuzzle({ source: task.source, date: task.date })
+    console.log(`[DownloadManager] Result:`, result)
+    
     if (result.puzzle) {
+      console.log(`[DownloadManager] Puzzle parsed successfully, upserting to storage`)
       await upsertPuzzle(result.puzzle)
       notify({ type: 'completed', taskId: task.id, sourceId: task.source.id, puzzle: result.puzzle })
       await persistQueueRecord(task, 'complete')
@@ -65,6 +71,7 @@ async function processQueue(): Promise<void> {
       task.resolve({ type: 'completed', taskId: task.id, sourceId: task.source.id, puzzle: result.puzzle })
     } else {
       const message = result.error?.message ?? 'Unknown parser error'
+      console.error(`[DownloadManager] Parse failed:`, message)
       notify({ type: 'failed', taskId: task.id, sourceId: task.source.id, error: message })
       await persistQueueRecord(task, 'error', message)
       await useSourcesStore.getState().recordSyncResult(task.source.id, false, message)
@@ -72,6 +79,7 @@ async function processQueue(): Promise<void> {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Download failed'
+    console.error(`[DownloadManager] Error:`, error)
     notify({ type: 'failed', taskId: task.id, sourceId: task.source.id, error: message })
     await persistQueueRecord(task, 'error', message)
     await useSourcesStore.getState().recordSyncResult(task.source.id, false, message)
