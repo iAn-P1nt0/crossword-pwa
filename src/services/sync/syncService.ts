@@ -2,7 +2,6 @@ import useSourcesStore from '@/stores/useSourcesStore'
 import useSettingsStore from '@/stores/useSettingsStore'
 import { getSourceById } from '@/services/api/sourceRegistry'
 import { enqueueDownload } from './downloadManager'
-import type { PuzzleSource } from '@/types/source.types'
 
 let syncTimer: number | null = null
 

@@ -33,7 +33,7 @@ function CrosswordGrid({ grid, focusedCell, highlights, onSelectCell, cellSize =
         aria-label="Crossword grid"
         className="mx-auto block max-h-[640px]"
       >
-        {grid.map((row, rowIndex) =>
+        {grid.map((row) =>
           row.map((cell) => (
             <CrosswordCellComponent
               key={cell.id}
