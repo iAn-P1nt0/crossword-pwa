@@ -3,6 +3,7 @@ import useSourcesStore from '@/stores/useSourcesStore'
 import useSettingsStore from '@/stores/useSettingsStore'
 import SourceCard from './SourceCard'
 import { requestSourceSync, triggerManualSync } from '@/services/sync/syncService'
+import { remoteSyncEnabled } from '@/config/runtimeConfig'
 
 function SourceManager() {
   const sources = useSourcesStore((state) => state.sources)
@@ -41,12 +42,17 @@ function SourceManager() {
           type="button"
           className="rounded-full border border-border bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           onClick={handleSyncAll}
-          disabled={!initialized || !isOnline || syncing}
+          disabled={!initialized || !isOnline || syncing || !remoteSyncEnabled}
         >
-          {syncing ? 'Syncing…' : 'Sync all'}
+          {remoteSyncEnabled ? (syncing ? 'Syncing…' : 'Sync all') : 'Sync disabled'}
         </button>
       </header>
       {!isOnline && <p className="text-sm text-amber-600 dark:text-amber-400">Offline mode — sync resumes when online.</p>}
+      {!remoteSyncEnabled && (
+        <p className="text-sm text-muted-foreground">
+          Remote downloads are disabled for local development. Set <code className="rounded bg-muted px-1 py-0.5 text-xs">VITE_ENABLE_REMOTE_SOURCES=true</code> and restart the dev server to enable real source sync.
+        </p>
+      )}
       <div className="space-y-3">
         {sources.map((source) => (
           <SourceCard
@@ -55,6 +61,7 @@ function SourceManager() {
             status={statusMap[source.id]}
             onToggle={toggleSource}
             onDownload={handleDownload}
+            disabled={!remoteSyncEnabled || !isOnline}
           />
         ))}
       </div>

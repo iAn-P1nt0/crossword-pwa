@@ -5,9 +5,10 @@ interface SourceCardProps {
   status?: SourceStatus
   onToggle: (sourceId: string, enabled: boolean) => Promise<void> | void
   onDownload: (sourceId: string) => Promise<void> | void
+  disabled?: boolean
 }
 
-function SourceCard({ source, status, onToggle, onDownload }: SourceCardProps) {
+function SourceCard({ source, status, onToggle, onDownload, disabled }: SourceCardProps) {
   const enabled = status?.enabled ?? source.defaultEnabled
   const lastSyncedAt = status?.lastSyncedAt ? new Date(status.lastSyncedAt).toLocaleString() : 'Never'
 
@@ -37,7 +38,7 @@ function SourceCard({ source, status, onToggle, onDownload }: SourceCardProps) {
         type="button"
         className="rounded-lg border border-border bg-muted px-3 py-2 text-sm font-medium disabled:opacity-50"
         onClick={() => void onDownload(source.id)}
-        disabled={!enabled}
+        disabled={!enabled || disabled}
       >
         Download Latest
       </button>

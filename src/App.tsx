@@ -13,6 +13,7 @@ import useStatsStore from '@/stores/useStatsStore'
 import type { PuzzleData } from '@/types/puzzle.types'
 import { getRecentPuzzles } from '@/services/storage/puzzleStorage'
 import { startSyncService, stopSyncService, triggerManualSync } from '@/services/sync/syncService'
+import { remoteSyncEnabled } from '@/config/runtimeConfig'
 
 function App() {
   const [activePuzzle, setActivePuzzle] = useState<PuzzleData | null>(null)
@@ -58,11 +59,15 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!remoteSyncEnabled) {
+      return undefined
+    }
     startSyncService({ intervalMinutes: 60 })
     return () => stopSyncService()
   }, [])
 
   const handleSyncRequest = async () => {
+    if (!remoteSyncEnabled) return
     setSyncing(true)
     try {
       await triggerManualSync()

@@ -1,5 +1,6 @@
 import useSettingsStore from '@/stores/useSettingsStore'
 import usePuzzleStore from '@/stores/usePuzzleStore'
+import { remoteSyncEnabled } from '@/config/runtimeConfig'
 
 interface HeaderProps {
   onSyncRequest: () => void
@@ -53,11 +54,11 @@ function Header({ onSyncRequest, syncing }: HeaderProps) {
         </button>
         <button
           type="button"
-          className="rounded-full border border-border bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold"
+          className="rounded-full border border-border bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold disabled:opacity-60"
           onClick={onSyncRequest}
-          disabled={syncing}
+          disabled={syncing || !remoteSyncEnabled || !isOnline}
         >
-          {syncing ? 'Syncing…' : 'Sync Sources'}
+          {remoteSyncEnabled ? (syncing ? 'Syncing…' : 'Sync Sources') : 'Sync disabled'}
         </button>
       </div>
     </header>

@@ -2,10 +2,15 @@ import useSourcesStore from '@/stores/useSourcesStore'
 import useSettingsStore from '@/stores/useSettingsStore'
 import { getSourceById } from '@/services/api/sourceRegistry'
 import { enqueueDownload } from './downloadManager'
+import { remoteSyncEnabled } from '@/config/runtimeConfig'
 
 let syncTimer: number | null = null
 
 export async function triggerManualSync() {
+  if (!remoteSyncEnabled) {
+    console.info('Remote sync disabled. Set VITE_ENABLE_REMOTE_SOURCES=true to enable downloads.')
+    return
+  }
   const sourcesStore = useSourcesStore.getState()
   const settings = useSettingsStore.getState()
   if (!settings.isOnline) {
@@ -21,6 +26,10 @@ export async function triggerManualSync() {
 }
 
 export async function requestSourceSync(sourceId: string) {
+  if (!remoteSyncEnabled) {
+    await useSourcesStore.getState().recordSyncResult(sourceId, false, 'Remote sync disabled in dev')
+    return
+  }
   const source = getSourceById(sourceId)
   if (!source) {
     throw new Error(`Unknown source: ${sourceId}`)
@@ -33,6 +42,7 @@ export async function requestSourceSync(sourceId: string) {
 export function startSyncService(options: { intervalMinutes?: number } = {}) {
   const intervalMinutes = options.intervalMinutes ?? 30
   if (typeof window === 'undefined') return
+  if (!remoteSyncEnabled) return
   stopSyncService()
   syncTimer = window.setInterval(() => {
     void triggerManualSync()

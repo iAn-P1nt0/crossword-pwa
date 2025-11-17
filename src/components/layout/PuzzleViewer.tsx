@@ -9,6 +9,7 @@ import { useStats } from '@/hooks/useStats'
 import type { Direction, GridPosition } from '@/types/grid.types'
 import type { PuzzleClue } from '@/types/puzzle.types'
 import { buildHighlightState, findClueForCell, getDirectionClues } from '@/utils/gridCalculations'
+import { useShallow } from 'zustand/react/shallow'
 
 function PuzzleViewer() {
   const {
@@ -22,18 +23,20 @@ function PuzzleViewer() {
     validatePuzzle,
     elapsedSeconds,
     incrementTimer,
-  } = usePuzzleStore((state) => ({
-    currentPuzzle: state.currentPuzzle,
-    grid: state.grid,
-    direction: state.direction,
-    focusedCell: state.focusedCell,
-    setFocus: state.setFocus,
-    toggleDirection: state.toggleDirection,
-    resetPuzzle: state.resetPuzzle,
-    validatePuzzle: state.validatePuzzle,
-    elapsedSeconds: state.elapsedSeconds,
-    incrementTimer: state.incrementTimer,
-  }))
+  } = usePuzzleStore(
+    useShallow((state) => ({
+      currentPuzzle: state.currentPuzzle,
+      grid: state.grid,
+      direction: state.direction,
+      focusedCell: state.focusedCell,
+      setFocus: state.setFocus,
+      toggleDirection: state.toggleDirection,
+      resetPuzzle: state.resetPuzzle,
+      validatePuzzle: state.validatePuzzle,
+      elapsedSeconds: state.elapsedSeconds,
+      incrementTimer: state.incrementTimer,
+    })),
+  )
 
   const { stats, recordCompletion } = useStats(currentPuzzle?.puzzleId)
   const statusKey = currentPuzzle?.puzzleId ?? 'global'
