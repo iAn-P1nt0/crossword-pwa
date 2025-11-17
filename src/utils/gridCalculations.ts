@@ -1,5 +1,5 @@
 import type { CrosswordCell, Direction, GridPosition, HighlightState } from '@/types/grid.types'
-import type { PuzzleClue } from '@/types/puzzle.types'
+import type { PuzzleClue, PuzzleData } from '@/types/puzzle.types'
 
 export function cellsForClue(clue: PuzzleClue): GridPosition[] {
   const cells: GridPosition[] = []
@@ -50,7 +50,7 @@ export function getAdjacentClue(
   return clues[nextIndex]
 }
 
-export function getDirectionClues(direction: Direction, puzzle?: { cluesAcross: PuzzleClue[]; cluesDown: PuzzleClue[] }) {
+export function getDirectionClues(direction: Direction, puzzle?: Pick<PuzzleData, 'cluesAcross' | 'cluesDown'> | null) {
   if (!puzzle) return []
   return direction === 'across' ? puzzle.cluesAcross : puzzle.cluesDown
 }
