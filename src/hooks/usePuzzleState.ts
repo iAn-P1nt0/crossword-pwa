@@ -21,6 +21,4 @@ export function usePuzzleState(puzzle?: PuzzleData | null) {
       cancelled = true
     }
   }, [puzzle, loadPuzzle])
-
-  return usePuzzleStore()
 }
