@@ -77,7 +77,7 @@ function PuzzleViewer() {
 
   const handleValidate = () => {
     const solvedPuzzle = validatePuzzle()
-    setStatusMessage(solvedPuzzle ? '🎉 Puzzle solved! Great work.' : 'Still some letters to fix.')
+    setStatusMessage(solvedPuzzle ? 'Puzzle solved! Great work.' : 'Still some letters to fix.')
     setSolved(solvedPuzzle)
     if (solvedPuzzle && currentPuzzle) {
       void recordCompletion(currentPuzzle.puzzleId, elapsedSeconds)
