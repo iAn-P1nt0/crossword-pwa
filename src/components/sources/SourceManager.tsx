@@ -13,9 +13,10 @@ function SourceManager() {
   const isOnline = useSettingsStore((state) => state.isOnline)
   const [syncing, setSyncing] = useState(false)
 
+  const freeSources = useMemo(() => sources.filter((source) => source.category === 'free'), [sources])
   const enabledSources = useMemo(
-    () => sources.filter((source) => statusMap[source.id]?.enabled ?? source.defaultEnabled),
-    [sources, statusMap],
+    () => freeSources.filter((source) => statusMap[source.id]?.enabled ?? source.defaultEnabled),
+    [freeSources, statusMap],
   )
 
   const handleSyncAll = async () => {
@@ -35,7 +36,7 @@ function SourceManager() {
     <section className="space-y-4 rounded-2xl border border-border bg-card p-4">
       <header className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Sources</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Free Sources</p>
           <h2 className="text-xl font-semibold">{enabledSources.length} enabled</h2>
         </div>
         <button
@@ -54,7 +55,7 @@ function SourceManager() {
         </p>
       )}
       <div className="space-y-3">
-        {sources.map((source) => (
+        {freeSources.map((source) => (
           <SourceCard
             key={source.id}
             source={source}
@@ -64,6 +65,9 @@ function SourceManager() {
             disabled={!remoteSyncEnabled || !isOnline}
           />
         ))}
+        {freeSources.length === 0 && (
+          <p className="text-sm text-muted-foreground">No free sources are configured.</p>
+        )}
       </div>
     </section>
   )
