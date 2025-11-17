@@ -19,10 +19,16 @@ export function registerServiceWorker() {
 export async function requestBackgroundSync(tag = 'puzzle-sync') {
   const registration = await registerServiceWorker()
   if (!registration || !('sync' in registration)) return
-  const syncCapable = registration as ServiceWorkerRegistration & { sync: SyncManager }
+  const syncCapable = registration as SyncCapableRegistration
   try {
     await syncCapable.sync.register(tag)
   } catch (error) {
     console.warn('Background sync unavailable', error)
+  }
+}
+
+interface SyncCapableRegistration extends ServiceWorkerRegistration {
+  sync: {
+    register: (tag: string) => Promise<void>
   }
 }
