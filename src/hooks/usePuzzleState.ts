@@ -9,17 +9,18 @@ export function usePuzzleState(puzzle?: PuzzleData | null) {
   useEffect(() => {
     if (!puzzle) return
     let cancelled = false
+    const activePuzzle = puzzle
     async function hydrate() {
-      const saved = await getProgress(puzzle.puzzleId)
+      const saved = await getProgress(activePuzzle.puzzleId)
       if (!cancelled) {
-        loadPuzzle(puzzle, saved ?? undefined)
+        loadPuzzle(activePuzzle, saved ?? undefined)
       }
     }
     hydrate()
     return () => {
       cancelled = true
     }
-  }, [puzzle?.puzzleId, loadPuzzle, puzzle])
+  }, [puzzle, loadPuzzle])
 
   return usePuzzleStore()
 }
