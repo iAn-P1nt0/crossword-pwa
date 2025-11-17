@@ -3,6 +3,9 @@ import type { PuzzleApiResult, PuzzleDownloadRequest, PuzzleDownloadResponse } f
 import type { PuzzleFormat, PuzzleSource } from '@/types/source.types'
 import type { ParseResult } from '@/types/puzzle.types'
 
+// Log CORS proxy configuration on module load
+console.log(`[PuzzleApiService] Module loaded. CORS proxy configured: "${corsProxyUrl}"`)
+
 class PuzzleHttpError extends Error {
   status: number
 
@@ -243,31 +246,42 @@ function buildRequestUrl(template: string, date?: string) {
 }
 
 function applyCorsProxy(url: string) {
+  console.log(`[applyCorsProxy] Input URL: ${url}`)
+  console.log(`[applyCorsProxy] corsProxyUrl from config: "${corsProxyUrl}"`)
+
   if (!corsProxyUrl) {
+    console.warn(`[applyCorsProxy] No CORS proxy configured, using direct URL`)
     return { finalUrl: url, proxiedThrough: '' }
   }
 
   const trimmed = corsProxyUrl.trim()
   if (!trimmed) {
+    console.warn(`[applyCorsProxy] CORS proxy is empty after trim, using direct URL`)
     return { finalUrl: url, proxiedThrough: '' }
   }
 
   // Support placeholder replacement e.g. https://proxy.com/?target={url}
   if (trimmed.includes('{url}')) {
     const finalUrl = trimmed.replace('{url}', encodeURIComponent(url))
+    console.log(`[applyCorsProxy] Using placeholder pattern: ${finalUrl}`)
     return { finalUrl, proxiedThrough: trimmed }
   }
 
   // Support trailing query indicator for proxies like corsproxy.io/?
   if (trimmed.endsWith('?')) {
-    return { finalUrl: `${trimmed}${url}`, proxiedThrough: trimmed }
+    const finalUrl = `${trimmed}${url}`
+    console.log(`[applyCorsProxy] Using ? pattern: ${finalUrl}`)
+    return { finalUrl, proxiedThrough: trimmed }
   }
 
   if (trimmed.endsWith('=')) {
-    return { finalUrl: `${trimmed}${encodeURIComponent(url)}`, proxiedThrough: trimmed }
+    const finalUrl = `${trimmed}${encodeURIComponent(url)}`
+    console.log(`[applyCorsProxy] Using = pattern: ${finalUrl}`)
+    return { finalUrl, proxiedThrough: trimmed }
   }
 
   const finalUrl = `${trimmed}${url}`
+  console.log(`[applyCorsProxy] Using direct concatenation: ${finalUrl}`)
   return { finalUrl, proxiedThrough: trimmed }
 }
 
