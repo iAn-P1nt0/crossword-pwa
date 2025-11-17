@@ -40,6 +40,7 @@ Test each source individually to isolate issues:
 3. **Expected outcomes**:
    - Tests iPUZ parser (not PUZ)
    - Likely 404 (weekly puzzle, not daily)
+   - Consider enabling `VITE_CORS_PROXY_URL` to bypass browser CORS if you need actual downloads
 
 ### Phase 3: Monitor Console Logs
 Watch for these log sequences:
