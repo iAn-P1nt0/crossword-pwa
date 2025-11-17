@@ -91,7 +91,6 @@ function BulkTestRunner() {
   }
 
   const successCount = results.filter(r => r.status === 'success').length
-  const failedCount = results.filter(r => r.status === 'failed').length
   const pendingCount = results.filter(r => r.status === 'pending').length
   const expectedErrorsCount = results.filter(r => r.errorCategory === 'expected').length
   const actualErrorsCount = results.filter(r => r.status === 'failed' && r.errorCategory !== 'expected').length
