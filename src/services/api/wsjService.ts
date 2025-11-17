@@ -16,7 +16,7 @@ export function fetchWsjDailyPuzzle(options: WsjDownloadOptions = {}): Promise<P
 
 export function fetchWsjPremiumPuzzle(options: WsjDownloadOptions = {}): Promise<PuzzleApiResult> {
   const source = ensureSource('wsj-premium')
-  const headers = options.cookie ? { Cookie: options.cookie } : {}
+  const headers: Record<string, string> = options.cookie ? { Cookie: options.cookie } : {}
   return downloadAndParsePuzzle({
     source: mergeHeaders(source, headers),
     date: options.date,

@@ -18,6 +18,7 @@ export async function fetchWithRetry(input: FetchInput, options: RetryOptions = 
     signal,
     ...rest
   } = options
+  const baseSignal = signal ?? undefined
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     const controller = timeoutMs ? new AbortController() : undefined
@@ -25,7 +26,7 @@ export async function fetchWithRetry(input: FetchInput, options: RetryOptions = 
     try {
       const response = await fetch(input, {
         ...rest,
-        signal: controller ? mergeSignals(signal, controller.signal) : signal,
+        signal: controller ? mergeSignals(baseSignal, controller.signal) : baseSignal,
       })
 
       if (response.ok || !retryOn.includes(response.status) || attempt === retries) {
