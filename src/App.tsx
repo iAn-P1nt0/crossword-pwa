@@ -78,12 +78,38 @@ function App() {
     }
   }
 
+  // Show test page if testMode is enabled
+  if (testMode) {
+    return (
+      <div>
+        <button
+          onClick={() => setTestMode(false)}
+          className="fixed top-4 right-4 z-50 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+        >
+          ← Back to App
+        </button>
+        <TestDownload />
+      </div>
+    )
+  }
+
   return (
-    <AppLayout
-      header={<Header onSyncRequest={handleSyncRequest} syncing={syncing} />}
-      primary={<PuzzleViewer />}
-      sidebar={<SourceManager />}
-    />
+    <>
+      {remoteSyncEnabled && (
+        <button
+          onClick={() => setTestMode(true)}
+          className="fixed bottom-4 right-4 z-50 px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+          title="Open download test page"
+        >
+          🧪 Test
+        </button>
+      )}
+      <AppLayout
+        header={<Header onSyncRequest={handleSyncRequest} syncing={syncing} />}
+        primary={<PuzzleViewer />}
+        sidebar={<SourceManager />}
+      />
+    </>
   )
 }
 
