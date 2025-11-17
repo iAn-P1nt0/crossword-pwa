@@ -1,7 +1,16 @@
 import { corsProxyUrl } from '@/config/runtimeConfig'
 import type { PuzzleApiResult, PuzzleDownloadRequest, PuzzleDownloadResponse } from '@/types/api.types'
-import type { PuzzleFormat } from '@/types/source.types'
+import type { PuzzleFormat, PuzzleSource } from '@/types/source.types'
 import type { ParseResult } from '@/types/puzzle.types'
+
+class PuzzleHttpError extends Error {
+  status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
 
 let parserFn: ((blob: Blob, format: PuzzleFormat) => Promise<ParseResult>) | null = null
 
@@ -31,11 +40,14 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
     }
   } catch (error) {
     console.error(`[PuzzleApiService] Download/parse error:`, error)
+    const status = error instanceof PuzzleHttpError ? error.status : undefined
+    const retriable = typeof status === 'number' ? status >= 500 || status === 429 : true
     return {
       error: {
         sourceId: request.source.id,
+        status,
         message: error instanceof Error ? error.message : 'Unknown download error',
-        retriable: true,
+        retriable,
       },
     }
   }
@@ -60,9 +72,9 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
     console.log(`[PuzzleApiService] Response status: ${response.status}`)
 
     if (!response.ok) {
-      const errorType = categorizeHttpError(response.status)
-      const errorMessage = formatHttpError(source.name, response.status, errorType)
-      throw new Error(errorMessage)
+      const errorType = categorizeHttpError(response.status, source)
+      const errorMessage = formatHttpError(source, response.status, errorType)
+      throw new PuzzleHttpError(response.status, errorMessage)
     }
 
     const blob = await response.blob()
@@ -78,9 +90,10 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
   } catch (error) {
     // Enhanced error handling for network issues
     if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw new Error(
+      throw new PuzzleHttpError(
+        0,
         `CORS blocked: ${source.name} does not allow browser access. ` +
-        `This is expected for most sources. Use a CORS proxy or server-side download in production.`
+        `This is expected for most sources. Use a CORS proxy or server-side download in production.`,
       )
     }
     throw error
@@ -131,21 +144,26 @@ function applyCorsProxy(url: string) {
   return { finalUrl, proxiedThrough: trimmed }
 }
 
-function categorizeHttpError(status: number): string {
-  if (status === 401 || status === 403) return 'AUTH_REQUIRED'
+type HttpErrorType = 'AUTH_REQUIRED' | 'ACCESS_BLOCKED' | 'NOT_FOUND' | 'RATE_LIMITED' | 'SERVER_ERROR' | 'UNKNOWN'
+
+function categorizeHttpError(status: number, source: PuzzleSource): HttpErrorType {
+  if ((status === 401 || status === 403) && source.requiresAuth) return 'AUTH_REQUIRED'
+  if (status === 401 || status === 403) return 'ACCESS_BLOCKED'
   if (status === 404) return 'NOT_FOUND'
   if (status === 429) return 'RATE_LIMITED'
   if (status >= 500) return 'SERVER_ERROR'
   return 'UNKNOWN'
 }
 
-function formatHttpError(sourceName: string, status: number, errorType: string): string {
-  const messages: Record<string, string> = {
-    AUTH_REQUIRED: `${sourceName} requires authentication (${status}). This is a paid/premium source.`,
-    NOT_FOUND: `${sourceName} puzzle not found (404). May not be published yet or URL pattern incorrect.`,
-    RATE_LIMITED: `${sourceName} rate limit exceeded (429). Try again later.`,
-    SERVER_ERROR: `${sourceName} server error (${status}). Try again later.`,
-    UNKNOWN: `${sourceName} returned error: ${status}`,
+function formatHttpError(source: PuzzleSource, status: number, errorType: HttpErrorType): string {
+  const { name, category } = source
+  const messages: Record<HttpErrorType, string> = {
+    AUTH_REQUIRED: `${name} requires authentication (${status}). Provide valid credentials for this premium source.`,
+    ACCESS_BLOCKED: `${name} blocked the request (${status}). This source is marked as ${category}, but the publisher may require referer headers, geo access, or an alternative download endpoint.`,
+    NOT_FOUND: `${name} puzzle not found (404). May not be published yet or the URL pattern is incorrect.`,
+    RATE_LIMITED: `${name} rate limit exceeded (429). Try again later.`,
+    SERVER_ERROR: `${name} server error (${status}). Try again later.`,
+    UNKNOWN: `${name} returned error: ${status}`,
   }
-  return messages[errorType] || messages.UNKNOWN
+  return messages[errorType]
 }

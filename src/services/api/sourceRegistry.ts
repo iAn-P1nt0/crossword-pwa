@@ -17,7 +17,8 @@ export const FREE_SOURCES: PuzzleSource[] = [
     priority: 1,
     defaultEnabled: true,
     download: {
-      url: 'https://s.wsj.net/public/resources/documents/XWD{{MM}}{{DD}}{{YYYY}}.puz',
+      // WSJ puzzles are distributed via the Amuse Labs CDN
+      url: 'https://cdn3.amuselabs.com/wsj/crossword?id=wsj{{YYYY}}{{MM}}{{DD}}.puz',
       method: 'GET',
       headers: userAgentHeader,
       format: 'puz',
