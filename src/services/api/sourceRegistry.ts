@@ -17,8 +17,8 @@ export const FREE_SOURCES: PuzzleSource[] = [
     priority: 1,
     defaultEnabled: true,
     download: {
-      // WSJ puzzles are distributed via the Amuse Labs CDN
-      url: 'https://cdn3.amuselabs.com/wsj/crossword?id=wsj{{YYYY}}{{MM}}{{DD}}.puz',
+      // Use the public herbach mirror which provides WSJ puzzles with YYMMDD naming
+      url: 'https://herbach.dnsalias.com/WSJ/wsj{{YY}}{{MM}}{{DD}}.puz',
       method: 'GET',
       headers: userAgentHeader,
       format: 'puz',

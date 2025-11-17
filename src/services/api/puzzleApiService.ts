@@ -108,11 +108,12 @@ function buildRequestUrl(template: string, date?: string) {
   const targetDate = date ? new Date(date) : new Date()
   const tokens: Record<string, string> = {
     YYYY: targetDate.getUTCFullYear().toString(),
+    YY: targetDate.getUTCFullYear().toString().slice(-2),
     MM: String(targetDate.getUTCMonth() + 1).padStart(2, '0'),
     DD: String(targetDate.getUTCDate()).padStart(2, '0'),
   }
 
-  return template.replace(/{{(YYYY|MM|DD)}}/g, (_, token: keyof typeof tokens) => tokens[token])
+  return template.replace(/{{(YYYY|YY|MM|DD)}}/g, (_, token: keyof typeof tokens) => tokens[token])
 }
 
 function applyCorsProxy(url: string) {
