@@ -3,6 +3,7 @@ import AppLayout from '@/components/layout/AppLayout'
 import Header from '@/components/layout/Header'
 import PuzzleViewer from '@/components/layout/PuzzleViewer'
 import SourceManager from '@/components/sources/SourceManager'
+import TestDownload from '@/components/debug/TestDownload'
 import { useOfflineSync } from '@/hooks/useOfflineSync'
 import { usePuzzleState } from '@/hooks/usePuzzleState'
 import { useKeyboard } from '@/hooks/useKeyboard'
@@ -18,6 +19,7 @@ import { remoteSyncEnabled } from '@/config/runtimeConfig'
 function App() {
   const [activePuzzle, setActivePuzzle] = useState<PuzzleData | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [testMode, setTestMode] = useState(false)
   const hydrateSettings = useSettingsStore((state) => state.hydrate)
   const hydrateStats = useStatsStore((state) => state.hydrate)
   const initializeSources = useSourcesStore((state) => state.initialize)
