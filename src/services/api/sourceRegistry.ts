@@ -115,7 +115,7 @@ export const FREE_SOURCES: PuzzleSource[] = [
     requiresAuth: false,
     authType: 'none',
     priority: 6,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://josephcrosswords.com/puzzles/{{YYYY}}/{{MM}}/{{DD}}.ipuz',
       method: 'GET',
@@ -135,7 +135,7 @@ export const FREE_SOURCES: PuzzleSource[] = [
     requiresAuth: false,
     authType: 'none',
     priority: 7,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'http://herbach.dnsalias.com/Jonesin/jonesin{{YYYY}}{{MM}}{{DD}}.puz',
       method: 'GET',
@@ -155,7 +155,7 @@ export const FREE_SOURCES: PuzzleSource[] = [
     requiresAuth: false,
     authType: 'none',
     priority: 8,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://erikagard.com/puzzles/{{YYYY}}/{{MM}}/{{DD}}.ipuz',
       method: 'GET',
@@ -175,7 +175,7 @@ export const FREE_SOURCES: PuzzleSource[] = [
     requiresAuth: false,
     authType: 'none',
     priority: 9,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://chronicle.com/crossword/che{{YYYY}}{{MM}}{{DD}}.puz',
       method: 'GET',
@@ -195,7 +195,7 @@ export const FREE_SOURCES: PuzzleSource[] = [
     requiresAuth: false,
     authType: 'none',
     priority: 10,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://herbach.dnsalias.com/WaPo/wapo{{YYYY}}{{MM}}{{DD}}.puz',
       method: 'GET',
@@ -239,7 +239,7 @@ export const PAID_SOURCES: PaidPuzzleSource[] = [
     requiresAuth: true,
     authType: 'cookie',
     priority: 2,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://www.wsj.com/puzzles/crossword/{{YYYY}}/{{MM}}/{{DD}}/download.puz',
       method: 'GET',
@@ -260,7 +260,7 @@ export const PAID_SOURCES: PaidPuzzleSource[] = [
     requiresAuth: true,
     authType: 'api_key',
     priority: 3,
-    defaultEnabled: false,
+    defaultEnabled: true,
     download: {
       url: 'https://content.guardianapis.com/crosswords/{{YYYY}}/{{MM}}/{{DD}}?format=ipuz',
       method: 'GET',

@@ -61,28 +61,110 @@ function TestDownload() {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold">Test Sources</h2>
+        <h2 className="text-lg font-semibold">Test Free Sources (Daily)</h2>
         
-        <div className="space-y-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             onClick={() => handleTest('wsj-daily')}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
           >
-            Test WSJ Daily (PUZ)
+            WSJ Daily
           </button>
           
           <button
             onClick={() => handleTest('usa-today')}
-            className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
           >
-            Test USA Today (PUZ)
+            USA Today
           </button>
           
           <button
-            onClick={() => handleTest('joseph-crosswords')}
-            className="w-full px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50"
+            onClick={() => handleTest('la-times')}
+            className="px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-sm"
           >
-            Test Joseph Crosswords (iPUZ)
+            LA Times
+          </button>
+          
+          <button
+            onClick={() => handleTest('universal-crossword')}
+            className="px-3 py-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 text-sm"
+          >
+            Universal
+          </button>
+          
+          <button
+            onClick={() => handleTest('newsday-stan-newman')}
+            className="px-3 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 text-sm"
+          >
+            Newsday
+          </button>
+          
+          <button
+            onClick={() => handleTest('crosSynergy-wapo')}
+            className="px-3 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 text-sm"
+          >
+            WaPo/CrosSynergy
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Test Weekly Sources (iPUZ)</h2>
+        
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => handleTest('joseph-crosswords')}
+            className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+          >
+            Joseph Crosswords
+          </button>
+          
+          <button
+            onClick={() => handleTest('jonesin-crosswords')}
+            className="px-3 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 text-sm"
+          >
+            Jonesin'
+          </button>
+          
+          <button
+            onClick={() => handleTest('erik-agard')}
+            className="px-3 py-2 bg-violet-600 text-white rounded hover:bg-violet-700 text-sm"
+          >
+            Erik Agard
+          </button>
+          
+          <button
+            onClick={() => handleTest('chronicle-higher-education')}
+            className="px-3 py-2 bg-fuchsia-600 text-white rounded hover:bg-fuchsia-700 text-sm"
+          >
+            Chronicle HE
+          </button>
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Test Paid Sources (Auth Required)</h2>
+        
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => handleTest('nyt-premium')}
+            className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+          >
+            NYT Premium
+          </button>
+          
+          <button
+            onClick={() => handleTest('wsj-premium')}
+            className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+          >
+            WSJ Premium
+          </button>
+          
+          <button
+            onClick={() => handleTest('guardian-cryptic')}
+            className="px-3 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 text-sm"
+          >
+            Guardian Cryptic
           </button>
         </div>
       </div>
