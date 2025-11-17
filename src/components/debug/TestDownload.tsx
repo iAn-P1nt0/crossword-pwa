@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { requestSourceSync } from '@/services/sync/syncService'
 import { getSourceById } from '@/services/api/sourceRegistry'
 import type { PuzzleData } from '@/types/puzzle.types'
+import BulkTestRunner from './BulkTestRunner'
 
 function TestDownload() {
   const [status, setStatus] = useState<string>('Ready to test')
   const [puzzle, setPuzzle] = useState<PuzzleData | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [showBulkTest, setShowBulkTest] = useState(false)
 
   const handleTest = async (sourceId: string) => {
     setStatus(`Starting download for ${sourceId}...`)
@@ -40,6 +42,10 @@ function TestDownload() {
     }
   }
 
+  if (showBulkTest) {
+    return <BulkTestRunner />
+  }
+
   return (
     <div className="p-8 space-y-6">
       <div>
@@ -47,6 +53,12 @@ function TestDownload() {
         <p className="text-sm text-muted-foreground">
           Test the full puzzle download → parse → store → display flow
         </p>
+        <button
+          onClick={() => setShowBulkTest(true)}
+          className="mt-2 text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 underline"
+        >
+          → Switch to Bulk Test Runner (test all sources)
+        </button>
       </div>
 
       <div className="space-y-2">
