@@ -9,13 +9,19 @@ export function registerPuzzleParser(fn: (blob: Blob, format: PuzzleFormat) => P
 }
 
 export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Promise<PuzzleApiResult> {
+  console.log(`[PuzzleApiService] Starting download for ${request.source.id}`)
   try {
     const response = await fetchPuzzleAsset(request)
+    console.log(`[PuzzleApiService] Asset fetched successfully, format: ${response.format}`)
+    
     if (!parserFn) {
       throw new Error('Puzzle parser pipeline has not been registered yet.')
     }
 
+    console.log(`[PuzzleApiService] Parsing puzzle...`)
     const parsed = await parserFn(response.blob, response.format)
+    console.log(`[PuzzleApiService] Parse result:`, { success: parsed.success, hasData: !!parsed.data, error: parsed.error })
+    
     return {
       puzzle: parsed.data,
       response,
@@ -23,6 +29,7 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
       warnings: parsed.warnings,
     }
   } catch (error) {
+    console.error(`[PuzzleApiService] Download/parse error:`, error)
     return {
       error: {
         sourceId: request.source.id,
@@ -35,17 +42,23 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
 
 export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadRequest): Promise<PuzzleDownloadResponse> {
   const endpoint = buildRequestUrl(source.download.url, date)
+  console.log(`[PuzzleApiService] Fetching from: ${endpoint}`)
+  
   const response = await fetch(endpoint, {
     method: source.download.method ?? 'GET',
     headers: source.download.headers,
     signal,
   })
 
+  console.log(`[PuzzleApiService] Response status: ${response.status}`)
+
   if (!response.ok) {
     throw new Error(`Failed to download puzzle from ${source.name}: ${response.status}`)
   }
 
   const blob = await response.blob()
+  console.log(`[PuzzleApiService] Blob received, size: ${blob.size} bytes, type: ${blob.type}`)
+  
   return {
     sourceId: source.id,
     format: source.download.format,

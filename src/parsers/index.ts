@@ -18,13 +18,18 @@ const parsers: Record<PuzzleFormat, ParserImpl | undefined> = {
 }
 
 export async function parsePuzzleBlob(blob: Blob, format: PuzzleFormat): Promise<ParseResult> {
+  console.log(`[Parser] Parsing ${format} format, blob size: ${blob.size}`)
   const parser = parsers[format]
+  
   if (!parser) {
+    console.error(`[Parser] No parser registered for format: ${format}`)
     return {
       success: false,
-      error: `No parser registered for format "${format}"`,
+      error: `No parser registered for format: ${format}`,
     }
   }
 
-  return parser(blob)
+  const result = await parser(blob)
+  console.log(`[Parser] Parse complete:`, { success: result.success, format })
+  return result
 }
