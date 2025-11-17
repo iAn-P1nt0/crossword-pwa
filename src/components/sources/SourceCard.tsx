@@ -3,8 +3,8 @@ import type { PuzzleSource, SourceStatus } from '@/types/source.types'
 interface SourceCardProps {
   source: PuzzleSource
   status?: SourceStatus
-  onToggle: (sourceId: string, enabled: boolean) => void
-  onDownload: (sourceId: string) => void
+  onToggle: (sourceId: string, enabled: boolean) => Promise<void> | void
+  onDownload: (sourceId: string) => Promise<void> | void
 }
 
 function SourceCard({ source, status, onToggle, onDownload }: SourceCardProps) {
@@ -20,7 +20,7 @@ function SourceCard({ source, status, onToggle, onDownload }: SourceCardProps) {
         </div>
         <button
           type="button"
-          onClick={() => onToggle(source.id, !enabled)}
+          onClick={() => void onToggle(source.id, !enabled)}
           className={`rounded-full px-3 py-1 text-xs font-semibold ${enabled ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200' : 'bg-muted text-muted-foreground'}`}
         >
           {enabled ? 'Enabled' : 'Disabled'}
@@ -36,7 +36,7 @@ function SourceCard({ source, status, onToggle, onDownload }: SourceCardProps) {
       <button
         type="button"
         className="rounded-lg border border-border bg-muted px-3 py-2 text-sm font-medium disabled:opacity-50"
-        onClick={() => onDownload(source.id)}
+        onClick={() => void onDownload(source.id)}
         disabled={!enabled}
       >
         Download Latest

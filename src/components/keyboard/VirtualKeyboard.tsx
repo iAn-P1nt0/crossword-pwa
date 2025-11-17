@@ -1,5 +1,4 @@
 import usePuzzleStore from '@/stores/usePuzzleStore'
-import { cn } from '@/lib/utils'
 
 interface VirtualKeyboardProps {
   visible?: boolean

@@ -12,7 +12,7 @@ import useSourcesStore from '@/stores/useSourcesStore'
 import useStatsStore from '@/stores/useStatsStore'
 import type { PuzzleData } from '@/types/puzzle.types'
 import { getRecentPuzzles } from '@/services/storage/puzzleStorage'
-import { triggerManualSync } from '@/services/sync/syncService'
+import { startSyncService, stopSyncService, triggerManualSync } from '@/services/sync/syncService'
 
 function App() {
   const [activePuzzle, setActivePuzzle] = useState<PuzzleData | null>(null)
@@ -53,8 +53,13 @@ function App() {
         setActivePuzzle(custom.detail)
       }
     }
-    window.addEventListener('puzzle:downloaded', handler as EventListener)
-    return () => window.removeEventListener('puzzle:downloaded', handler as EventListener)
+    window.addEventListener('puzzle:downloaded', handler)
+    return () => window.removeEventListener('puzzle:downloaded', handler)
+  }, [])
+
+  useEffect(() => {
+    startSyncService({ intervalMinutes: 60 })
+    return () => stopSyncService()
   }, [])
 
   const handleSyncRequest = async () => {
