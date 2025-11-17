@@ -53,25 +53,39 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
   }
 }
 
+// Fallback CORS proxies in order of preference
+const FALLBACK_PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://api.codetabs.com/v1/proxy?quest=',
+]
+
 export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadRequest): Promise<PuzzleDownloadResponse> {
   const endpoint = buildRequestUrl(source.download.url, date)
+
+  // Try configured proxy first
   const { finalUrl, proxiedThrough } = applyCorsProxy(endpoint)
   console.log(`[PuzzleApiService] Fetching from: ${finalUrl}`)
   if (proxiedThrough) {
     console.log(`[PuzzleApiService] Request routed via CORS proxy: ${proxiedThrough}`)
   }
-  
+
   try {
-    const response = await fetch(finalUrl, {
+    const response = await fetchWithTimeout(finalUrl, {
       method: source.download.method ?? 'GET',
       headers: source.download.headers,
       signal,
       mode: 'cors',
-    })
+    }, 10000) // 10 second timeout
 
     console.log(`[PuzzleApiService] Response status: ${response.status}`)
 
     if (!response.ok) {
+      // If configured proxy fails with 403/500, try fallback proxies
+      if ((response.status === 403 || response.status >= 500) && proxiedThrough) {
+        console.warn(`[PuzzleApiService] Proxy failed with ${response.status}, trying fallbacks...`)
+        return await fetchWithFallbackProxies(endpoint, source, signal)
+      }
+
       const errorType = categorizeHttpError(response.status, source)
       const errorMessage = formatHttpError(source, response.status, errorType)
       throw new PuzzleHttpError(response.status, errorMessage)
@@ -79,7 +93,7 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
 
     const blob = await response.blob()
     console.log(`[PuzzleApiService] Blob received, size: ${blob.size} bytes, type: ${blob.type}`)
-    
+
     return {
       sourceId: source.id,
       format: source.download.format,
@@ -98,6 +112,69 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
     }
     throw error
   }
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal,
+    })
+    clearTimeout(timeout)
+    return response
+  } catch (error) {
+    clearTimeout(timeout)
+    throw error
+  }
+}
+
+async function fetchWithFallbackProxies(
+  endpoint: string,
+  source: PuzzleSource,
+  signal?: AbortSignal
+): Promise<PuzzleDownloadResponse> {
+  for (const proxy of FALLBACK_PROXIES) {
+    try {
+      const proxyUrl = proxy.endsWith('=')
+        ? `${proxy}${encodeURIComponent(endpoint)}`
+        : `${proxy}${endpoint}`
+
+      console.log(`[PuzzleApiService] Trying fallback proxy: ${proxy}`)
+
+      const response = await fetchWithTimeout(proxyUrl, {
+        method: source.download.method ?? 'GET',
+        headers: source.download.headers,
+        signal,
+        mode: 'cors',
+      }, 10000)
+
+      if (response.ok) {
+        console.log(`[PuzzleApiService] Success with fallback proxy: ${proxy}`)
+        const blob = await response.blob()
+
+        return {
+          sourceId: source.id,
+          format: source.download.format,
+          blob,
+          receivedAt: new Date().toISOString(),
+          etag: response.headers.get('etag') ?? undefined,
+        }
+      }
+
+      console.warn(`[PuzzleApiService] Fallback proxy ${proxy} returned ${response.status}`)
+    } catch (error) {
+      console.warn(`[PuzzleApiService] Fallback proxy ${proxy} failed:`, error)
+      continue
+    }
+  }
+
+  throw new PuzzleHttpError(
+    503,
+    `${source.name}: All CORS proxies failed. The puzzle source may be down or blocking proxy requests.`
+  )
 }
 
 function buildRequestUrl(template: string, date?: string) {
