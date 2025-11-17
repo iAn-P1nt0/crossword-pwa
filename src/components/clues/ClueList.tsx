@@ -15,7 +15,7 @@ function ClueList({ title, clues, activeClueId, onSelect }: ClueListProps) {
         <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h3>
         <span className="text-xs text-muted-foreground">{clues.length} clues</span>
       </header>
-      <div className="scrollbar-thin flex-1 space-y-1 overflow-auto">
+      <div className="flex-1 space-y-1 overflow-auto pr-1">
         {clues.map((clue) => (
           <ClueItem key={clue.id} clue={clue} isActive={clue.id === activeClueId} onSelect={onSelect} />
         ))}
