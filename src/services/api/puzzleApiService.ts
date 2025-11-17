@@ -1,3 +1,4 @@
+import { corsProxyUrl } from '@/config/runtimeConfig'
 import type { PuzzleApiResult, PuzzleDownloadRequest, PuzzleDownloadResponse } from '@/types/api.types'
 import type { PuzzleFormat } from '@/types/source.types'
 import type { ParseResult } from '@/types/puzzle.types'
@@ -42,10 +43,14 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
 
 export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadRequest): Promise<PuzzleDownloadResponse> {
   const endpoint = buildRequestUrl(source.download.url, date)
-  console.log(`[PuzzleApiService] Fetching from: ${endpoint}`)
+  const { finalUrl, proxiedThrough } = applyCorsProxy(endpoint)
+  console.log(`[PuzzleApiService] Fetching from: ${finalUrl}`)
+  if (proxiedThrough) {
+    console.log(`[PuzzleApiService] Request routed via CORS proxy: ${proxiedThrough}`)
+  }
   
   try {
-    const response = await fetch(endpoint, {
+    const response = await fetch(finalUrl, {
       method: source.download.method ?? 'GET',
       headers: source.download.headers,
       signal,
@@ -95,6 +100,35 @@ function buildRequestUrl(template: string, date?: string) {
   }
 
   return template.replace(/{{(YYYY|MM|DD)}}/g, (_, token: keyof typeof tokens) => tokens[token])
+}
+
+function applyCorsProxy(url: string) {
+  if (!corsProxyUrl) {
+    return { finalUrl: url, proxiedThrough: '' }
+  }
+
+  const trimmed = corsProxyUrl.trim()
+  if (!trimmed) {
+    return { finalUrl: url, proxiedThrough: '' }
+  }
+
+  // Support placeholder replacement e.g. https://proxy.com/?target={url}
+  if (trimmed.includes('{url}')) {
+    const finalUrl = trimmed.replace('{url}', encodeURIComponent(url))
+    return { finalUrl, proxiedThrough: trimmed }
+  }
+
+  // Support trailing query indicator for proxies like corsproxy.io/?
+  if (trimmed.endsWith('?')) {
+    return { finalUrl: `${trimmed}${url}`, proxiedThrough: trimmed }
+  }
+
+  if (trimmed.endsWith('=')) {
+    return { finalUrl: `${trimmed}${encodeURIComponent(url)}`, proxiedThrough: trimmed }
+  }
+
+  const finalUrl = `${trimmed}${url}`
+  return { finalUrl, proxiedThrough: trimmed }
 }
 
 function categorizeHttpError(status: number): string {

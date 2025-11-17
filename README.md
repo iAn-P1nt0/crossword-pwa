@@ -62,6 +62,23 @@ By default, remote puzzle downloads are **disabled** during local development to
 
 **Note**: Some puzzle sources require authentication or have CORS restrictions. You may see 401/403/404 errors for sources that require credentials.
 
+##### Using a CORS Proxy (Recommended for Browser Testing)
+
+Most puzzle providers block cross-origin requests, so browser-based downloads often fail with `Failed to fetch` errors. You can route requests through a CORS proxy during development:
+
+1. Edit `.env` and add a proxy URL (choose the format your proxy expects):
+  ```bash
+  # Option A – Proxy expects full URL appended after '?'
+  VITE_CORS_PROXY_URL=https://corsproxy.io/?
+
+  # Option B – Proxy expects encoded URL via placeholder
+  VITE_CORS_PROXY_URL=https://my-proxy.example.com/?target={url}
+  ```
+
+2. Restart the dev server (`npm run dev`). The download pipeline will log when requests are routed through the proxy.
+
+3. Remember to remove the proxy or switch to a server-side downloader for production deployments.
+
 ### Building for Production
 
 ```bash
