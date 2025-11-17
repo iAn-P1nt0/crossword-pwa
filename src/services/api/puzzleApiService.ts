@@ -53,9 +53,8 @@ export async function downloadAndParsePuzzle(request: PuzzleDownloadRequest): Pr
   }
 }
 
-// Fallback CORS proxies in order of preference
+// Fallback CORS proxies in order of preference (prioritizing binary file support)
 const FALLBACK_PROXIES = [
-  'https://api.allorigins.win/raw?url=',
   'https://api.codetabs.com/v1/proxy?quest=',
 ]
 
@@ -94,6 +93,11 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
     const blob = await response.blob()
     console.log(`[PuzzleApiService] Blob received, size: ${blob.size} bytes, type: ${blob.type}`)
 
+    // Validate binary file format (check for PUZ magic string if applicable)
+    if (source.download.format === 'puz') {
+      await validatePuzBlob(blob)
+    }
+
     return {
       sourceId: source.id,
       format: source.download.format,
@@ -111,6 +115,41 @@ export async function fetchPuzzleAsset({ source, date, signal }: PuzzleDownloadR
       )
     }
     throw error
+  }
+}
+
+async function validatePuzBlob(blob: Blob): Promise<void> {
+  // Read first 100 bytes to check for PUZ magic string
+  const slice = blob.slice(0, 100)
+  const buffer = await slice.arrayBuffer()
+  const view = new Uint8Array(buffer)
+
+  // Check for "ACROSS&DOWN" magic string at offset 0x2 (should be around bytes 2-13)
+  const magicString = 'ACROSS&DOWN'
+  let found = false
+
+  // Search in first 50 bytes for the magic string
+  for (let i = 0; i < Math.min(50, view.length - magicString.length); i++) {
+    let match = true
+    for (let j = 0; j < magicString.length; j++) {
+      if (view[i + j] !== magicString.charCodeAt(j)) {
+        match = false
+        break
+      }
+    }
+    if (match) {
+      found = true
+      console.log(`[PuzzleApiService] PUZ magic string found at offset ${i}`)
+      break
+    }
+  }
+
+  if (!found) {
+    // Log the actual content to help debug
+    const textDecoder = new TextDecoder()
+    const preview = textDecoder.decode(view.slice(0, Math.min(100, view.length)))
+    console.warn(`[PuzzleApiService] PUZ validation failed. First 100 bytes:`, preview)
+    throw new Error('Received data is not a valid PUZ file (magic string not found). The CORS proxy may be corrupting binary data.')
   }
 }
 
@@ -154,6 +193,16 @@ async function fetchWithFallbackProxies(
       if (response.ok) {
         console.log(`[PuzzleApiService] Success with fallback proxy: ${proxy}`)
         const blob = await response.blob()
+
+        // Validate binary format before returning
+        if (source.download.format === 'puz') {
+          try {
+            await validatePuzBlob(blob)
+          } catch {
+            console.warn(`[PuzzleApiService] Fallback proxy ${proxy} returned invalid PUZ file`)
+            continue // Try next proxy
+          }
+        }
 
         return {
           sourceId: source.id,
