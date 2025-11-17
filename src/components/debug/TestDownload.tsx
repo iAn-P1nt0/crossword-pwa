@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { requestSourceSync } from '@/services/sync/syncService'
 import { getSourceById } from '@/services/api/sourceRegistry'
-import { getPuzzleById } from '@/services/storage/puzzleStorage'
 import type { PuzzleData } from '@/types/puzzle.types'
 
 function TestDownload() {
