@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { PuzzleData, PuzzleProgress } from '@/types/puzzle.types'
-import type { PuzzleFormat, PuzzleSource } from '@/types/source.types'
+import type { PuzzleFormat, PuzzleSource, SourceCredentialConfig } from '@/types/source.types'
 
 export interface StoredPuzzleRecord {
   id?: number
@@ -21,7 +21,7 @@ export interface SourceConfigRecord {
   id: string
   source: PuzzleSource
   enabled: boolean
-  credentials?: Record<string, string>
+  credentials?: SourceCredentialConfig
   lastSyncedAt?: string
   lastDownloadedAt?: string
   error?: string
